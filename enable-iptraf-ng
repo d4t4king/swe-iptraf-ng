@@ -1,0 +1,102 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+use feature qw( switch );
+
+use Term::ANSIColor;
+use Cwd;
+
+my $arch = `uname -m`;
+chomp($arch);
+
+print colored("Found ARCH: $arch \n", "cyan");
+
+my $cwd = getcwd();
+given ($cwd) {
+	when ('/var/smoothwall/mods-available/iptraf-ng') {
+		print colored("CWD: $cwd\n", "cyan");
+		print colored("It looks like you are in the mod home directory.  Less to do!\n", "bold cyan"); 
+		print colored("Would you like to install this mod to your smoothie?  \n", "bold cyan");
+		my $ans = readline();
+		chomp($ans);
+		if ($ans =~ /[Yy](?:es)?/) {
+			chdir("bin");
+			# check for pre-existing symlink
+			if ((-e "iptraf-ng") and (-l "iptraf-ng" )) {
+				# the link already exists
+				print colored("Found a symlink already present.\n", "cyan");
+				my $target = readlink("iptraf-ng");
+				print colored("Got link target: $target\n", "cyan");
+				if ($target eq "iptraf-ng.$arch") {
+					# leave it be
+					print color("cyan");
+					print <<END;
+Link looks ok.  Leaving it alone.  If you notice any 
+peculiarities, you should remove the directory and 
+re-clone from github.com.
+END
+					print color('reset');
+				} else {
+					unlink("iptraf-ng");
+					system("/bin/ln -snf iptraf-ng.$arch iptraf-ng");
+					system("/bin/ln -snf rvnamed-ng.$arch rvnamed-ng");
+				}
+			} else {
+				# create the symlin for the appropriate ARCH
+				system("/bin/ln -snf iptraf-ng.$arch iptraf-ng");		
+				system("/bin/ln -snf rvnamed-ng.$arch rvnamed-ng");
+			}
+			chdir("/var/smoothwall/mods");
+			# create the link the mod dir to enable the mod
+			system("/bin/ln -snf ../mods-available/iptraf-ng iptraf-ng");
+			chdir $cwd;
+			system("/bin/touch installed");
+		} else {
+			print colored("Quitting.  \n", "bold red");
+		}
+	}
+	when ('/root/swe-iptraf-ng') {
+		# dev mode ?
+		print colored("It looks like you are in the dev directory.  \n", "cyan"); 
+		print colored("Would you like to install this mod to your smoothie?  \n", "cyan");
+		my $ans = readline();
+		chomp($ans);
+		if ($ans =~ /[Yy](?:es)?/) {
+			system("mkdir -p /var/smoothwall/mods-available/iptraf-ng");
+			system("cp -rf * /var/smoothwall/mods-available/iptraf-ng/");
+			chdir("/var/smoothwall/mods-available/iptraf-ng");
+		} else {
+			print colored("Quitting.  \n", "bold red");
+		}
+		chdir("bin");
+		if ((-e "iptraf-ng") and (-l "iptraf-ng" )) {
+			# the link already exists
+			print colored("Found a symlink already present.\n", "cyan");
+			my $target = readlink("iptraf-ng");
+			print colored("Got link target: $target\n", "cyan");
+			if ($target eq "iptraf-ng.$arch") {
+				# leave it be
+				print color("cyan");
+				print <<END;
+Link looks ok.  Leaving it alone.  If you notice any 
+peculiarities, you should remove the directory and 
+re-clone from github.com.
+END
+				print color('reset');
+			} else {
+				unlink("iptraf-ng");
+				system("/bin/ln -snf iptraf-ng.$arch iptraf-ng");
+			}
+		} else {
+			system("/bin/ln -snf iptraf-ng.$arch iptraf-ng");
+			
+		}
+		chdir("/var/smoothwall/mods");
+		system("/bin/ln -snf ../mods-available/iptraf-ng iptraf-ng");
+		chdir("iptraf-ng/");
+		system("/bin/touch installed");
+		chdir $cwd;
+	}
+	default { die colored("Unrecognized installation directory: $cwd", "red"); }
+}
