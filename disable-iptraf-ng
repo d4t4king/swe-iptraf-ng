@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Term::ANSIColor;
+
+print color("bold cyan");
+print <<END;
+
+This script will *disable* the iptraf-ng mod.  If you would like to 
+re-enable it at a later date, rerun the install script, or simply
+END
+print color('reset');
+print colored("create a symlink from ", "bold cyan");
+print colored("'/var/smoothwall/mods-available/iptraf-ng'", "bold green");
+print colored(" to \n", "bold cyan");
+print colored("'/var/smoothwall/mods/iptraf-ng'.  ", "bold green");
+
+print color("bold cyan");
+print <<END;
+If you would like to completely 
+remove iptraf-ng from your Smoothwall Express, simply delete the 
+END
+print color('reset');
+print colored("directory ", "bold cyan");
+print colored("'/var/smoothwall/mods-available/iptraf-ng'", "bold green");
+print colored(".\n\n", "bold cyan");
+
